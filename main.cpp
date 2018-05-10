@@ -34,10 +34,10 @@ int main()
          *file has a 1000x1000 pizza, and with a normal array, it would not fit into stack
          *memory and the program would crash*/
 
-        int** pizza =new int*[totalColumns];
-        for(int i=0;i<totalColumns;i++)
+        int** pizza =new int*[totalRows];
+        for(int i=0;i<totalRows;i++)
         {
-            pizza[i]=new int[totalRows];
+            pizza[i]=new int[totalColumns];
         }
 
         //as we read the input file, we assign 0s and 1s in the array, representing the two toppings
