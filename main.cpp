@@ -157,9 +157,9 @@ int main()
              *stores the dimensions of the rectangle as pairs of integers, so number
              *of rows will be on even indexes and number of columns on odd indexes*/
             int rows=shapes[2*i];
-            cout<<"\nrows:"<<rows;
+            //cout<<"\nrows:"<<rows;
             int columns=shapes[2*i+1];
-            cout<<"\ncolumns:"<<columns;
+            //cout<<"\ncolumns:"<<columns;
 
             /*We divide the pizza into smaller strips, and for simplicity's sake
              *we do it based which size is smaller(so if the current rectangle has less
@@ -211,15 +211,15 @@ int main()
                                 sum+=pizza[currentRow+k][currentColumn+l];
                             }
                         }
-                        cout<<sum<<" on row "<<currentRow;
+                        //cout<<sum<<" on row "<<currentRow;
 
                         //Check if there enough toppings of each type
                         if(sum>=minToppings && rows*width-sum>=minToppings)
                         {
                             slices++;
-                            cout<<" "<<currentColumn;
+                            //cout<<" "<<currentColumn;
                             currentColumn+=width;
-                            cout<<" passed"<<endl;
+                            //cout<<" passed"<<endl;
                         }
                         //if not, we advance currentColumn and add to the wastedCells array
                         else
@@ -227,10 +227,10 @@ int main()
                             //we advance currentColumn by 1 if width has not been changed
                             if(width==columns)
                             {
-                                cout<<" "<<currentColumn;
+                                //cout<<" "<<currentColumn;
                                 currentColumn++;
                                 wastedCells[i]+=rows;
-                                cout<<" +"<<rows<<endl;
+                                //cout<<" +"<<rows<<endl;
                             }
                             /*else, we know we are at the end of the 'strip', so we add all
                              *of the cells left to the wastedCells (if a slice does not have
@@ -239,10 +239,10 @@ int main()
                              *and set currentColumn to totalColumns so the loop will stop.*/
                             else
                             {
-                                cout<<" "<<currentColumn;
+                                //cout<<" "<<currentColumn;
                                 wastedCells[i]+=rows*width;
                                 currentColumn=totalColumns;
-                                cout<<" +"<<rows*width<<endl;
+                                //cout<<" +"<<rows*width<<endl;
                             }
                         }
                     }
@@ -296,15 +296,15 @@ int main()
                                 sum+=pizza[currentRow+k][currentColumn+l];
                             }
                         }
-                        cout<<sum<<" on column "<<currentColumn;
+                        //cout<<sum<<" on column "<<currentColumn;
 
                         //check if there are enough toppings of each type
                         if(sum>=minToppings && length*columns-sum>=minToppings)
                         {
                             slices++;
-                            cout<<" "<<currentRow;
+                            //cout<<" "<<currentRow;
                             currentRow+=length;
-                            cout<<" passed"<<endl;
+                            //cout<<" passed"<<endl;
                         }
                         //if not, we advance currentRow and add to the wastedCells array
                         else
@@ -312,20 +312,20 @@ int main()
                             //we advance currentRow by 1 if the length has not been changed
                             if(length==rows)
                             {
-                                cout<<" "<<currentRow;
+                                //cout<<" "<<currentRow;
                                 currentRow++;
                                 wastedCells[i]+=columns;
-                                cout<<" +"<<columns<<endl;
+                                //cout<<" +"<<columns<<endl;
                             }
                             /*else, we know we are at the end of the 'strip', so we add all
                             *of the cells left to the wastedCells, and set currentRow to
                             *totalRows so the loop will stop.*/
                             else
                             {
-                                cout<<" "<<currentRow;
+                                //cout<<" "<<currentRow;
                                 wastedCells[i]+=length*columns;
                                 currentRow=totalRows;
-                                cout<<" +"<<length*columns<<endl;
+                                //cout<<" +"<<length*columns<<endl;
                             }
                         }
                     }
@@ -342,18 +342,18 @@ int main()
         int indexOfMinimum=0;
         for(int i=0;i<rectangles;i++)
         {
-            cout<<wastedCells[i]<<" ";
+            //cout<<wastedCells[i]<<" ";
             if(wastedCells[indexOfMinimum]>wastedCells[i])
             {
                 indexOfMinimum=i;
             }
         }
-        cout<<"\nThe least possible amount of wasted cells is "<<wastedCells[indexOfMinimum]<<endl;
+        //cout<<"\nThe least possible amount of wasted cells is "<<wastedCells[indexOfMinimum]<<endl;
 
         //set the optimal rows and columns based on where the least number of wasted cells was
         int optimalRows=shapes[2*indexOfMinimum];
         int optimalColumns=shapes[2*indexOfMinimum+1];
-        cout<<optimalRows<<" "<<optimalColumns<<endl;
+        //cout<<optimalRows<<" "<<optimalColumns<<endl;
 
         //write the number of slices to the file
         fout<<pizzaSlices[indexOfMinimum]<<'\n';
