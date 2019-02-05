@@ -8,23 +8,27 @@
 
 using namespace std;
 
+int possbileRectangles(int maxCells);
+
 int main()
 {
     //these variables hold the size of the pizza
     int totalRows, totalColumns;
     //holds the number of minimum cells of a topping type and the most cells possible in a slice
-    int minToppings,maxCells;
+    int minToppings, maxCells;
 
     string inputFiles[4]={"medium.in","big.in","example.in","small.in"};
     string outputFiles[4]={"resultMedium.out","resultBig.out","resultExample.out","resultSmall.out"};
     ifstream fin;
     ofstream fout;
 
-    for(int currentFile=0;currentFile<4;currentFile++)
+    for(int currentFile = 0; currentFile < 4; currentFile++)
     {
-        fin.open(inputFiles[currentFile].c_str());
+    	string path = "Input Files\\" + inputFiles[currentFile];
+        fin.open(path.c_str());
         fout.open(outputFiles[currentFile].c_str());
         cout<<inputFiles[currentFile]<<endl;
+
         /*read the data about the size of the pizza, the minimum number of cells of each topping in
          *a slice and the maximum size of the slice*/
         fin>>totalRows>>totalColumns>>minToppings>>maxCells;
@@ -33,8 +37,7 @@ int main()
         /*make the pizza array, we use an array of pointers to pointers because the big.in
          *file has a 1000x1000 pizza, and with a normal array, it would not fit into stack
          *memory and the program would crash*/
-
-        int** pizza =new int*[totalRows];
+        int** pizza = new int*[totalRows];
         for(int i=0;i<totalRows;i++)
         {
             pizza[i]=new int[totalColumns];
@@ -154,9 +157,9 @@ int main()
              *stores the dimensions of the rectangle as pairs of integers, so number
              *of rows will be on even indexes and number of columns on odd indexes*/
             int rows=shapes[2*i];
-            //cout<<"\nrows:"<<rows;
+            cout<<"\nrows:"<<rows;
             int columns=shapes[2*i+1];
-            //cout<<"\ncolumns:"<<columns;
+            cout<<"\ncolumns:"<<columns;
 
             /*We divide the pizza into smaller strips, and for simplicity's sake
              *we do it based which size is smaller(so if the current rectangle has less
@@ -208,15 +211,15 @@ int main()
                                 sum+=pizza[currentRow+k][currentColumn+l];
                             }
                         }
-                        //cout<<sum<<" on row "<<currentRow;
+                        cout<<sum<<" on row "<<currentRow;
 
                         //Check if there enough toppings of each type
                         if(sum>=minToppings && rows*width-sum>=minToppings)
                         {
                             slices++;
-                            //cout<<" "<<currentColumn;
+                            cout<<" "<<currentColumn;
                             currentColumn+=width;
-                            //cout<<" passed"<<endl;
+                            cout<<" passed"<<endl;
                         }
                         //if not, we advance currentColumn and add to the wastedCells array
                         else
@@ -224,10 +227,10 @@ int main()
                             //we advance currentColumn by 1 if width has not been changed
                             if(width==columns)
                             {
-                                //cout<<" "<<currentColumn;
+                                cout<<" "<<currentColumn;
                                 currentColumn++;
                                 wastedCells[i]+=rows;
-                                //cout<<" +"<<rows<<endl;
+                                cout<<" +"<<rows<<endl;
                             }
                             /*else, we know we are at the end of the 'strip', so we add all
                              *of the cells left to the wastedCells (if a slice does not have
@@ -236,10 +239,10 @@ int main()
                              *and set currentColumn to totalColumns so the loop will stop.*/
                             else
                             {
-                                //cout<<" "<<currentColumn;
+                                cout<<" "<<currentColumn;
                                 wastedCells[i]+=rows*width;
                                 currentColumn=totalColumns;
-                                //cout<<" +"<<rows*width<<endl;
+                                cout<<" +"<<rows*width<<endl;
                             }
                         }
                     }
@@ -293,15 +296,15 @@ int main()
                                 sum+=pizza[currentRow+k][currentColumn+l];
                             }
                         }
-                        //cout<<sum<<" on column "<<currentColumn;
+                        cout<<sum<<" on column "<<currentColumn;
 
                         //check if there are enough toppings of each type
                         if(sum>=minToppings && length*columns-sum>=minToppings)
                         {
                             slices++;
-                            //cout<<" "<<currentRow;
+                            cout<<" "<<currentRow;
                             currentRow+=length;
-                            //cout<<" passed"<<endl;
+                            cout<<" passed"<<endl;
                         }
                         //if not, we advance currentRow and add to the wastedCells array
                         else
@@ -309,20 +312,20 @@ int main()
                             //we advance currentRow by 1 if the length has not been changed
                             if(length==rows)
                             {
-                                //cout<<" "<<currentRow;
+                                cout<<" "<<currentRow;
                                 currentRow++;
                                 wastedCells[i]+=columns;
-                                //cout<<" +"<<columns<<endl;
+                                cout<<" +"<<columns<<endl;
                             }
                             /*else, we know we are at the end of the 'strip', so we add all
                             *of the cells left to the wastedCells, and set currentRow to
                             *totalRows so the loop will stop.*/
                             else
                             {
-                                //cout<<" "<<currentRow;
+                                cout<<" "<<currentRow;
                                 wastedCells[i]+=length*columns;
                                 currentRow=totalRows;
-                                //cout<<" +"<<length*columns<<endl;
+                                cout<<" +"<<length*columns<<endl;
                             }
                         }
                     }
