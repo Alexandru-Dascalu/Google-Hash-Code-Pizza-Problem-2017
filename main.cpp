@@ -9,14 +9,10 @@
 using namespace std;
 
 int possbileRectangles(int maxCells);
+int** makePizza(ifstream &fin, int totalRows, int totalColumns );
 
 int main()
 {
-    //these variables hold the size of the pizza
-    int totalRows, totalColumns;
-    //holds the number of minimum cells of a topping type and the most cells possible in a slice
-    int minToppings, maxCells;
-
     string inputFiles[4]={"medium.in","big.in","example.in","small.in"};
     string outputFiles[4]={"resultMedium.out","resultBig.out","resultExample.out","resultSmall.out"};
     ifstream fin;
@@ -29,37 +25,17 @@ int main()
         fout.open(outputFiles[currentFile].c_str());
         cout<<inputFiles[currentFile]<<endl;
 
+        //these variables hold the size of the pizza
+        int totalRows, totalColumns;
+        //holds the number of minimum cells of a topping type and the most cells possible in a slice
+        int minToppings, maxCells;
+
         /*read the data about the size of the pizza, the minimum number of cells of each topping in
          *a slice and the maximum size of the slice*/
         fin>>totalRows>>totalColumns>>minToppings>>maxCells;
-        char topping;
 
-        /*make the pizza array, we use an array of pointers to pointers because the big.in
-         *file has a 1000x1000 pizza, and with a normal array, it would not fit into stack
-         *memory and the program would crash*/
-        int** pizza = new int*[totalRows];
-        for(int i=0;i<totalRows;i++)
-        {
-            pizza[i]=new int[totalColumns];
-        }
-
-        //as we read the input file, we assign 0s and 1s in the array, representing the two toppings
-        for(int i=0;i<totalRows;i++)
-        {
-            for(int j=0;j<totalColumns;j++)
-            {
-                //tomatoes are represented by 1s, mushrooms by 0s
-                fin>>topping;
-                if(topping=='T')
-                {
-                    pizza[i][j]=1;
-                }
-                else if(topping=='M')
-                {
-                    pizza[i][j]=0;
-                }
-            }
-        }
+        //get a pointer to the pizza array
+        int** pizza = makePizza(fin, totalRows, totalColumns);
 
         /*find out how many possible rectangles can be made with maxCells number of cells.
         Basically, we find out how many pairs of integers have maxCells as their product,
@@ -466,5 +442,38 @@ int main()
         fout.clear();
         fout.close();
     }
+}
+
+int** makePizza(ifstream &fin, int totalRows, int totalColumns)
+{
+	 /*make the pizza array, we use an array of pointers to pointers because the big.in
+	         *file has a 1000x1000 pizza, and with a normal array, it would not fit into stack
+	         *memory and the program would crash*/
+	int** pizza = new int*[totalRows];
+	for(int i=0;i<totalRows;i++)
+	{
+		pizza[i]=new int[totalColumns];
+	}
+
+	char topping;
+	//as we read the input file, we assign 0s and 1s in the array, representing the two toppings
+	for(int i=0;i<totalRows;i++)
+	{
+		for(int j=0;j<totalColumns;j++)
+		{
+			//tomatoes are represented by 1s, mushrooms by 0s
+			fin>>topping;
+			if(topping=='T')
+			{
+				pizza[i][j]=1;
+			}
+			else if(topping=='M')
+			{
+				pizza[i][j]=0;
+			}
+		}
+	}
+
+	return pizza;
 }
 
