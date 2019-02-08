@@ -5,136 +5,79 @@
 #include <fstream>
 #include <math.h>
 #include <string>
+#include <vector>
 
 using namespace std;
 
-int possbileRectangles(int maxCells);
-int** makePizza(ifstream &fin, int totalRows, int totalColumns );
+/** A data structure that represents a rectangle configuration, it is made up
+ * of a number of rows and a number of columns.*/
+struct rectangle
+{
+	int rows;
+	int columns;
+};
+
+/*A function that finds out what rectangle configurations we can have with
+ * a rectangle that has maxCells cells. The vector that it returns does not
+ * have rectangle configurations with maxCells cells that do not fit in the
+ * whole pizza.*/
+vector<rectangle> possibleRectangles(int maxCells, int totalRows, int totalColumns);
+
+/*A function that reads data from a file representing a pizza and returns a
+ * pointer to a matrix representing the pizza with 0s and 1s.*/
+int** makePizza(string path, int & totalRows, int & totalColumns,
+		int & minToppings, int & maxCells);
 
 int main()
 {
     string inputFiles[4]={"medium.in","big.in","example.in","small.in"};
     string outputFiles[4]={"resultMedium.out","resultBig.out","resultExample.out","resultSmall.out"};
-    ifstream fin;
-    ofstream fout;
 
+    //divide the pizza of each file
     for(int currentFile = 0; currentFile < 4; currentFile++)
     {
-    	string path = "Input Files\\" + inputFiles[currentFile];
-        fin.open(path.c_str());
-        fout.open(outputFiles[currentFile].c_str());
-        cout<<inputFiles[currentFile]<<endl;
+    	string filePath = "Input Files\\" + inputFiles[currentFile];
 
-        //these variables hold the size of the pizza
+    	//these variables hold the size of the pizza
         int totalRows, totalColumns;
         //holds the number of minimum cells of a topping type and the most cells possible in a slice
         int minToppings, maxCells;
 
-        /*read the data about the size of the pizza, the minimum number of cells of each topping in
-         *a slice and the maximum size of the slice*/
-        fin>>totalRows>>totalColumns>>minToppings>>maxCells;
-
         //get a pointer to the pizza array
-        int** pizza = makePizza(fin, totalRows, totalColumns);
+        int** pizza = makePizza(filePath, totalRows, totalColumns, minToppings, maxCells);
 
-        /*find out how many possible rectangles can be made with maxCells number of cells.
-        Basically, we find out how many pairs of integers have maxCells as their product,
-        and increment the number of rectangles after we make sure a rectangle with those
-        dimensions actually fits in the array.*/
-        int rectangles=0;
-        int i=1;
-        int quotient=maxCells;
-        while(i<quotient)
-        {
-            if(maxCells%i==0)
-            {
-                quotient=maxCells/i;
-
-                //see if an iXquotient rectangle fits in the pizza
-                if(i<=totalRows && quotient<=totalColumns)
-                {
-                    rectangles++;
-                }
-
-                //see if an quotientXi rectangle fits in the pizza
-                if(quotient<=totalRows && i<=totalColumns)
-                {
-                    rectangles++;
-                }
-            }
-            i++;
-        }
-        cout<<rectangles<<endl;
-
-        //create an array that holds the sizes of all the rectangles, stored in pairs,
-        //so 1,5 means 1 row and 5 columns and 5,1 means 5 rows, 1 column
-        int shapes[2*rectangles];
-
-        int current=0;
-        i=1;
-        quotient=maxCells;
-        while(i<quotient)
-        {
-            //again, we find all the pairs that have maxCells as their product and add the pairs to the arrays
-            if(maxCells%i==0)
-            {
-                quotient=maxCells/i;
-
-                //see if an iXquotient rectangle fits in the pizza and add it's sizes to the array if it does
-                if(i<=totalRows && quotient<=totalColumns)
-                {
-                    shapes[current]=i;
-                    shapes[current+1]=quotient;
-                    current+=2;
-                }
-
-                //see if an quotientXi rectangle fits in the pizza and add it's sizes to the array if it does
-                if(quotient<=totalRows && i<=totalColumns)
-                {
-                    shapes[current]=quotient;
-                    shapes[current+1]=i;
-                    current+=2;
-                }
-            }
-            i++;
-        }
-
-        //display the pairs of rows and columns for valid rectangle configurations
-        cout<<"Rectangle configurations:"<<endl;
-        for(int i=0;i<2*rectangles;i++)
-        {
-            cout<<shapes[i]<<" ";
-        }
-        cout<<endl;
+        vector<rectangle> possibleSliceShapes = possibleRectangles(maxCells, totalRows, totalColumns);
 
         /*this array will hold the number of wasted cells (cells not included in a slice)
          for each rectangle confirguration*/
-        int wastedCells[rectangles];
+        int wastedCells[possibleSliceShapes.size()];
 
         /*this array holds the number of valid slices the pizza is cut into for each
          *rectangle configuration, because we need this number for the output file*/
-        int pizzaSlices[rectangles];
+        int pizzaSlices[possibleSliceShapes.size()];
 
         //we will add to values in this array, so we have to initialize it with 0s
-        for(int i=0;i<rectangles;i++)
+        for(unsigned int i=0;i<possibleSliceShapes.size();i++)
         {
             wastedCells[i]=0;
         }
 
         /*for each rectangle configuration, we try to cut the pizza in rectangles
          *with these dimensions, and see which configuration is most optimal*/
-        for (int i=0;i<rectangles;i++)
+        for (unsigned int i=0;i<possibleSliceShapes.size();i++)
         {
             //the number of valid slices we will cut the pizza into
             int slices=0;
+
+            rectangle sliceConfiguration = possibleSliceShapes[i];
 
             /*We assign the size of the current rectangle, we use 2*i because the
              *shapes array is twice the size of the number of rectangles, and it
              *stores the dimensions of the rectangle as pairs of integers, so number
              *of rows will be on even indexes and number of columns on odd indexes*/
-            int rows=shapes[2*i];
+            int rows = sliceConfiguration.rows;
             //cout<<"\nrows:"<<rows;
-            int columns=shapes[2*i+1];
+            int columns = sliceConfiguration.columns;
             //cout<<"\ncolumns:"<<columns;
 
             /*We divide the pizza into smaller strips, and for simplicity's sake
@@ -151,6 +94,7 @@ int main()
                 int currentRow=0;
                 //the width of the slice we are checking
                 int width;
+
                 /*Then,in these strips we see if a slice of rowsXcolumns cells is a valid
                  *slice. If it is, we increment the number of valid slices and advance currentColumn
                  *by the width of the rectangle. Else we add the number of cells in one column of
@@ -316,7 +260,7 @@ int main()
 
         //we find the minimum number of wasted cells
         int indexOfMinimum=0;
-        for(int i=0;i<rectangles;i++)
+        for(int i=0; i < possibleSliceShapes.size(); i++)
         {
             //cout<<wastedCells[i]<<" ";
             if(wastedCells[indexOfMinimum]>wastedCells[i])
@@ -327,10 +271,12 @@ int main()
         //cout<<"\nThe least possible amount of wasted cells is "<<wastedCells[indexOfMinimum]<<endl;
 
         //set the optimal rows and columns based on where the least number of wasted cells was
-        int optimalRows=shapes[2*indexOfMinimum];
-        int optimalColumns=shapes[2*indexOfMinimum+1];
+        rectangle optimalShape = possibleSliceShapes[indexOfMinimum];
+        int optimalRows = optimalShape.rows;
+        int optimalColumns = optimalShape.columns;
         //cout<<optimalRows<<" "<<optimalColumns<<endl;
 
+        ofstream fout(outputFiles[currentFile].c_str());
         //write the number of slices to the file
         fout<<pizzaSlices[indexOfMinimum]<<'\n';
 
@@ -437,22 +383,31 @@ int main()
         delete[] pizza;
 
         //close input stream and outputstream
-        fin.clear();
-        fin.close();
         fout.clear();
         fout.close();
     }
 }
 
-int** makePizza(ifstream &fin, int totalRows, int totalColumns)
+/*A function that reads data from a file at the given path representing a
+ * pizza and returns a pointer to a matrix representing the pizza with 0s
+ * and 1s. It also reads the number of total rows, total columns, max cells
+ * in a slice and the number of minimum toppings in a slice.*/
+int** makePizza(string path, int & totalRows, int & totalColumns, int & minToppings, int & maxCells)
 {
-	 /*make the pizza array, we use an array of pointers to pointers because the big.in
-	         *file has a 1000x1000 pizza, and with a normal array, it would not fit into stack
-	         *memory and the program would crash*/
+	ifstream fin(path.c_str());
+	cout<<path<<endl;
+
+	/*read the data about the size of the pizza, the minimum number of cells of each topping in
+	 *a slice and the maximum size of the slice*/
+	fin>>totalRows>>totalColumns>>minToppings>>maxCells;
+
+	/*make the pizza array, we use an array of pointers to pointers because the big.in
+	 * file has a 1000x1000 pizza, and with a normal array, it would not fit into stack
+	 * file memory and the program would crash*/
 	int** pizza = new int*[totalRows];
-	for(int i=0;i<totalRows;i++)
+	for(int i=0; i < totalRows; i++)
 	{
-		pizza[i]=new int[totalColumns];
+		pizza[i] = new int[totalColumns];
 	}
 
 	char topping;
@@ -475,5 +430,58 @@ int** makePizza(ifstream &fin, int totalRows, int totalColumns)
 	}
 
 	return pizza;
+}
+
+/*A function that finds out what rectangle configurations we can have with
+ * a rectangle that has maxCells cells. The vector that it returns does not
+ * have rectangle configurations with maxCells cells that do not fit in the
+ * whole pizza.*/
+vector<rectangle> possibleRectangles(int maxCells, int totalRows, int totalColumns)
+{
+	/*find out what possible rectangles can be made with maxCells number of cells.
+	 *  Basically, we find out how many pairs of integers have maxCells as their product,
+	 *  and make a rectangle data structure with those sizes and add it to the vector
+	 *  after we make sure a rectangle with those dimensions actually fits in the array.*/
+	int i=1;
+	int quotient=maxCells;
+	vector<rectangle> possibleSliceShapes;
+
+	while(i<quotient)
+	{
+		if(maxCells%i==0)
+		{
+			quotient=maxCells/i;
+
+			//see if an iXquotient rectangle fits in the pizza
+			if(i<=totalRows && quotient<=totalColumns)
+			{
+				rectangle newRectangle;
+				newRectangle.rows = i;
+				newRectangle.columns = quotient;
+
+				possibleSliceShapes.push_back(newRectangle);
+
+				cout<<i<<" "<<quotient<<" ";
+			}
+
+			//see if an quotientXi rectangle fits in the pizza
+			if(quotient<=totalRows && i<=totalColumns)
+			{
+				rectangle newRectangle;
+				newRectangle.rows = quotient;
+				newRectangle.columns = i;
+
+				possibleSliceShapes.push_back(newRectangle);
+
+				cout<<quotient<<" "<<i<<" ";
+			}
+		}
+
+		i++;
+	}
+
+	cout<<endl;
+
+	return possibleSliceShapes;
 }
 
