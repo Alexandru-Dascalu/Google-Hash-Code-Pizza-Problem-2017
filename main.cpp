@@ -17,6 +17,14 @@ struct rectangle
 	int columns;
 };
 
+struct slice
+{
+	int startRow;
+	int startColumn;
+	int endRow;
+	int endColumn;
+};
+
 /*A function that finds out what rectangle configurations we can have with
  * a rectangle that has maxCells cells. The vector that it returns does not
  * have rectangle configurations with maxCells cells that do not fit in the
@@ -28,7 +36,20 @@ vector<rectangle> possibleRectangles(int maxCells, int totalRows, int totalColum
 int** makePizza(string path, int & totalRows, int & totalColumns,
 		int & minToppings, int & maxCells);
 
-int wastedCellsForRectangle(rectangle sliceShape, int** pizza, int pizzaRows, int pizzaColumns, int minToppings);
+/*A function that counts the number of wasted cells if the piza was divided in slices
+ * using a certain rectangle configuration and certain number of minimum toppings
+ * and returns the number.*/
+int wastedCellsForRectangle(rectangle sliceShape, int** pizza, int pizzaRows,
+		int pizzaColumns, int minToppings);
+
+/*Calculates a vector of pizza slices from the given pizza using the given
+ * rectangle configuration.*/
+vector<slice> getPizzaSlices(rectangle sliceShape, int** pizza, int pizzaRows, int pizzaColumns,
+		int minToppings);
+
+/*A function that takes in a vector of pizza slices and writes them to a file
+ * at the given path.*/
+void writeSlicesToFile(vector<slice> pizzaSlices, string path);
 
 int main()
 {
@@ -41,29 +62,27 @@ int main()
     	string filePath = "Input Files\\" + inputFiles[currentFile];
 
     	//these variables hold the size of the pizza
-        int totalRows, totalColumns;
+        int pizzaRows, pizzaColumns;
         //holds the number of minimum cells of a topping type and the most cells possible in a slice
         int minToppings, maxCells;
 
-        //get a pointer to the pizza array
-        int** pizza = makePizza(filePath, totalRows, totalColumns, minToppings, maxCells);
+        /*get a pointer to the pizza matrix and also initialise the size of the
+         * pizza, the max cells in a slice and the minimum number of toppings.*/
+        int** pizza = makePizza(filePath, pizzaRows, pizzaColumns, minToppings, maxCells);
 
-        vector<rectangle> possibleSliceShapes = possibleRectangles(maxCells, totalRows, totalColumns);
+        //vector of all possible rectangles configurations with maxCells cells
+        //that can fit in our pizza
+        vector<rectangle> possibleSliceShapes = possibleRectangles(maxCells, pizzaRows, pizzaColumns);
 
         /*this array will hold the number of wasted cells (cells not included in a slice)
          for each rectangle confirguration*/
         int wastedCells[possibleSliceShapes.size()];
 
-        /*this array holds the number of valid slices the pizza is cut into for each
-         *rectangle configuration, because we need this number for the output file*/
-        int pizzaSlices[possibleSliceShapes.size()];
-
         //we will add to values in this array, so we have to initialize it with 0s
         for(unsigned int i=0; i<possibleSliceShapes.size(); i++)
         {
             wastedCells[i] = wastedCellsForRectangle(possibleSliceShapes[i], pizza,
-            		totalRows, totalColumns, minToppings);
-            //cout<<"wated cells: "<<wastedCells[i]<<endl;
+            		pizzaRows, pizzaColumns, minToppings);
         }
 
         //we find the minimum number of wasted cells
@@ -80,119 +99,18 @@ int main()
 
         //set the optimal rows and columns based on where the least number of wasted cells was
         rectangle optimalShape = possibleSliceShapes[indexOfMinimum];
-        int optimalRows = optimalShape.rows;
-        int optimalColumns = optimalShape.columns;
-        //cout<<optimalRows<<" "<<optimalColumns<<endl;
 
-        ofstream fout(outputFiles[currentFile].c_str());
-        //write the number of slices to the file
-        //fout<<pizzaSlices[indexOfMinimum]<<'\n';
+        vector<slice> pizzaSlices = getPizzaSlices(optimalShape, pizza, pizzaRows,
+        		pizzaColumns, minToppings);
 
-        /*We repeat the entire algorithm from above, but we dont count wastedCells,
-         *and we add valid slices to the output file*/
-        if(optimalRows<=optimalColumns)
-        {
-            int currentColumn,currentRow=0,width;
-            while(currentRow<totalRows)
-            {
-                if(currentRow+optimalRows>totalRows)
-                {
-                        optimalRows=totalRows-currentRow;
-                }
-                currentColumn=0;
-                width=optimalColumns;
-                while(currentColumn<totalColumns)
-                {
-                    if(currentColumn+width>totalColumns)
-                    {
-                        width=totalColumns-currentColumn;
-                    }
-                    int sum=0;
-                    for(int k=0;k<optimalRows;k++)
-                    {
-                        for(int l=0;l<width;l++)
-                        {
-                            sum+=pizza[currentRow+k][currentColumn+l];
-                        }
-                    }
-
-                    if(sum>=minToppings && optimalRows*width-sum>=minToppings)
-                    {
-                        fout<<currentRow<<" "<<currentColumn<<" "<<currentRow+optimalRows-1<<" "<<currentColumn+width-1<<'\n';
-                        currentColumn+=width;
-                    }
-                    else
-                    {
-                        if(width==optimalColumns)
-                        {
-                            currentColumn++;
-                        }
-                        else
-                        {
-                            currentColumn=totalColumns;
-                        }
-                    }
-                }
-                currentRow+=optimalRows;
-            }
-        }
-        else
-        {
-            int currentColumn=0,currentRow,length;
-            while(currentColumn<totalColumns)
-            {
-                if(currentColumn+optimalColumns>totalColumns)
-                {
-                    optimalColumns=totalColumns-currentColumn;
-                }
-                currentRow=0;
-                length=optimalRows;
-                while(currentRow<totalRows)
-                {
-                    if(currentRow+length>totalRows)
-                    {
-                        length=totalRows-currentRow;
-                    }
-                    int sum=0;
-                    for(int k=0;k<length;k++)
-                    {
-                        for(int l=0;l<optimalColumns;l++)
-                        {
-                            sum+=pizza[currentRow+k][currentColumn+l];
-                        }
-                    }
-
-                    if(sum>=minToppings && length*optimalColumns-sum>=minToppings)
-                    {
-                        fout<<currentRow<<" "<<currentColumn<<" "<<currentRow+length-1<<" "<<currentColumn+optimalColumns-1<<'\n';
-                        currentRow+=length;
-                    }
-                    else
-                    {
-                        if(length==optimalRows)
-                        {
-                            currentRow++;
-                        }
-                        else
-                        {
-                            currentRow=totalRows;
-                        }
-                    }
-                }
-                currentColumn+=optimalColumns;
-            }
-        }
+        writeSlicesToFile(pizzaSlices, outputFiles[currentFile]);
 
         //we delete the pointer array
-        for(int i=0;i<totalRows;i++)
+        for(int i=0;i<pizzaRows;i++)
         {
             delete[] pizza[i];
         }
         delete[] pizza;
-
-        //close input stream and outputstream
-        fout.clear();
-        fout.close();
     }
 }
 
@@ -293,6 +211,9 @@ vector<rectangle> possibleRectangles(int maxCells, int totalRows, int totalColum
 	return possibleSliceShapes;
 }
 
+/*A function that counts the number of wasted cells if the piza was divided in slices
+ * using a certain rectangle configuration and certain number of minimum toppings
+ * and returns the number.*/
 int wastedCellsForRectangle(rectangle sliceShape, int** pizza, int pizzaRows,
 		int pizzaColumns, int minToppings)
 {
@@ -443,3 +364,187 @@ int wastedCellsForRectangle(rectangle sliceShape, int** pizza, int pizzaRows,
 	return wastedCells;
 }
 
+/*Calculates a vector of pizza slices from the given pizza using the given
+ * rectangle configuration.*/
+vector<slice> getPizzaSlices(rectangle sliceShape, int** pizza, int pizzaRows,
+		int pizzaColumns, int minToppings)
+{
+	/*We divide the pizza into smaller strips, and for simplicity's sake
+	 *we do it based which side is smaller(so if the current rectangle has less
+	 *we rows than it has columns, we divide it in horizontal strips, and
+	 *we we divide it in vertical strips otherwise).*/
+
+	/*The width of the "strips" the pizza is didvided in. Equal to the number of
+	 * rows or columns in the rectangle, depending on which side of the rectangle
+	 * is smaller.*/
+	int stripWidth;
+
+	/*The length of the slice, and by length I mean the side of the slice not
+	 *  equal to the width of the strip. Equal to the number of
+	 * rows or columns in the rectangle, depending on which side of the rectangle
+	 * is larger.*/
+	int originalSliceLength;
+
+	/*The number of rows or columns on the side of the pizza perpendicular to the
+	 * strips. So if the strips are horizontal, this variable will be the number
+	 * of rows of the pizza, if the strips are vertical, this variabe will be
+	 * number of columns of the pizza.*/
+	int pizzaSidePerpendicularWithStrips;
+
+	/*The number of rows or columns on the side of the pizza parallel to the
+	 * strips. So if the strips are vertical, this variable will be the number
+	 * of rows of the pizza, if the strips are horizontal, this variabe will be
+	 * number of columns of the pizza.*/
+	int pizzaSideParallelWithStrips;
+
+	int optimalRows = sliceShape.rows;
+	int optimalColumns = sliceShape.columns;
+
+	if (optimalRows <= optimalColumns)
+	{
+		stripWidth = optimalRows;
+		originalSliceLength = optimalColumns;
+		pizzaSidePerpendicularWithStrips = pizzaRows;
+		pizzaSideParallelWithStrips = pizzaColumns;
+	}
+	else
+	{
+		stripWidth = optimalColumns;
+		originalSliceLength = optimalRows;
+		pizzaSidePerpendicularWithStrips = pizzaColumns;
+		pizzaSideParallelWithStrips = pizzaRows;
+	}
+
+	/*is the index of the upper row or column of the slice we are checking
+	 * same for each 'strip' we divide the pizza into*/
+	int currentStripIndex = 0;
+
+	vector<slice> pizzaSlices;
+
+	/*Then,in these strips we see if a slice of rowsXcolumns cells is a valid
+	 *slice. If it is, we increment the number of valid slices and advance currentColumn
+	 *by the width of the rectangle. Else we add the number of cells in one column of
+	 *the rectangle to the wastedCells array and advance currentColumn by 1.*/
+	while (currentStripIndex < pizzaSidePerpendicularWithStrips)
+	{
+		//if we reach the bottom of the pizza we may need to make the 'strip' smaller
+		if (currentStripIndex + stripWidth > pizzaSidePerpendicularWithStrips)
+		{
+			stripWidth = pizzaSidePerpendicularWithStrips - currentStripIndex;
+		}
+
+		/*is the index of the left most column or upper most row (depends on if
+		 * the strips are vertical or not)of the slice we are checking
+		 * not initialised here because it is reset for each slice of the pizza*/
+		int currentSliceIndex = 0;
+
+		/*at the end of the strip, the length of the last slice might become smaller,
+		 * so we have a variable to represent it but also one that holds the original
+		 * length of the slice*/
+		int variableSliceLength = originalSliceLength;
+
+		while (currentSliceIndex < pizzaSideParallelWithStrips)
+		{
+			//cout<<"Slice Index "<<currentSliceIndex<<endl;
+
+			/*at the end of the strip we may not have enough
+			 *space left, so we make the width smaller*/
+			if (currentSliceIndex + variableSliceLength
+					> pizzaSideParallelWithStrips)
+			{
+				variableSliceLength = pizzaSideParallelWithStrips
+						- currentSliceIndex;
+			}
+
+			//the sum of the cells in the slice we are checking
+			int sum = 0;
+
+			//add all the cells of the slice we are checking
+			for (int i = 0; i < stripWidth; i++)
+			{
+				for (int j = 0; j < variableSliceLength; j++)
+				{
+					if (sliceShape.rows <= sliceShape.columns)
+					{
+						sum += pizza[currentStripIndex + i][currentSliceIndex
+								+ j];
+					}
+					else
+					{
+						sum += pizza[currentSliceIndex + j][currentStripIndex
+								+ i];
+					}
+				}
+			}
+			//cout<<sum<<" on row "<<currentRow;
+
+			//Check if there enough toppings of each type
+			if (sum >= minToppings && (stripWidth * variableSliceLength - sum)
+										>= minToppings)
+			{
+				slice currentSlice;
+
+				if(optimalRows <= optimalColumns)
+				{
+					currentSlice.startRow = currentStripIndex;
+					currentSlice.startColumn = currentSliceIndex;
+					currentSlice.endRow = currentStripIndex + stripWidth - 1;
+					currentSlice.endColumn = currentSliceIndex + variableSliceLength - 1;
+				}
+				else
+				{
+					currentSlice.startRow = currentSliceIndex;
+					currentSlice.startColumn = currentStripIndex;
+					currentSlice.endRow = currentSliceIndex + variableSliceLength - 1;
+					currentSlice.endColumn = currentStripIndex + stripWidth - 1;
+				}
+
+				pizzaSlices.push_back(currentSlice);
+				currentSliceIndex += variableSliceLength;
+			}
+			//if not, we advance currentSliceIndex
+			else
+			{
+				//we advance currentSliceIndex by 1 if slice length has not been changed
+				if (variableSliceLength == originalSliceLength)
+				{
+					currentSliceIndex++;
+				}
+				/*else, we know we are at the end of the 'strip', so we terminate the loop.*/
+				else
+				{
+					/* currentStripIndex becomes equal with pizzaSidesPerpendicularWithStrips
+					 * so the loop will stop.*/
+					currentSliceIndex += variableSliceLength;
+				}
+			}
+		}
+		/*advance currentRow so we go to the next horizontal 'slice'. At the end,
+		 * currentStripIndex becomes equal with pizzaSidesPerpendicularWithStrips
+		 * so the loop will stop.*/
+		currentStripIndex += stripWidth;
+	}
+
+	return pizzaSlices;
+}
+
+/*A function that takes in a vector of pizza slices and writes them to a file
+ * at the given path.*/
+void writeSlicesToFile(vector<slice> pizzaSlices, string path)
+{
+	ofstream fout(path.c_str());
+
+	//write number of slices to the file
+	fout<<pizzaSlices.size();
+
+	//write the 4 coordinates of each slice to the file
+	for(unsigned int i = 0; i< pizzaSlices.size(); i++)
+	{
+		slice currentSlice = pizzaSlices[i];
+		fout<<endl<<currentSlice.startRow<<" "<<currentSlice.startColumn<<" "
+				<<currentSlice.endRow<<" "<<currentSlice.endColumn;
+	}
+
+	fout.clear();
+	fout.close();
+}
